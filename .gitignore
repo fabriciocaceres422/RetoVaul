@@ -1,3 +1,7 @@
 /RetroVault/nbproject/private/
 /RetroVault/dist/
 /RetroVault/build/
+
+.DS_Store
+__MACOSX/
+._*

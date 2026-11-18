@@ -1,6 +1,6 @@
 package es.izquierdofp.retrovault;
 
-import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatLightLaf;
 import es.izquierdofp.retrovault.datos.DatabaseManager;
 import es.izquierdofp.retrovault.vista.VentanaPrincipal;
 import javax.swing.SwingUtilities;
@@ -9,17 +9,21 @@ import javax.swing.UIManager;
 public class Main {
 
     public static void main(String[] args) {
-
-        try {
-            UIManager.setLookAndFeel(new FlatDarkLaf());
-        } catch (Exception e) {
-            System.err.println("No se pudo cargar FlatLaf: " + e.getMessage());
-        }
-
+        aplicarTema();
         DatabaseManager.inicializar();
+        SwingUtilities.invokeLater(Main::mostrarVentana);
+    }
 
-        SwingUtilities.invokeLater(() -> {
-            new VentanaPrincipal().setVisible(true);
-        });
+    /** Instala el tema claro; si falla, Swing usa su aspecto por defecto. */
+    private static void aplicarTema() {
+        try {
+            UIManager.setLookAndFeel(new FlatLightLaf());
+        } catch (Exception ex) {
+            System.err.println("Tema FlatLaf no disponible: " + ex.getMessage());
+        }
+    }
+
+    private static void mostrarVentana() {
+        new VentanaPrincipal().setVisible(true);
     }
 }

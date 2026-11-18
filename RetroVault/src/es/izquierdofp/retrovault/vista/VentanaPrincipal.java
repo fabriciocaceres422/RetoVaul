@@ -2,17 +2,22 @@ package es.izquierdofp.retrovault.vista;
 
 import es.izquierdofp.retrovault.datos.JuegoDAO;
 import es.izquierdofp.retrovault.modelo.Juego;
+import java.util.List;
+import javax.swing.JOptionPane;
 
 public class VentanaPrincipal extends javax.swing.JFrame {
 
-    private final JuegoDAO dao = new JuegoDAO();
-    private JuegosTableModel modeloTabla;
+    // Anchos iniciales de las 7 columnas, en el mismo orden que el modelo.
+    private static final int[] ANCHOS_COLUMNA = {35, 200, 110, 100, 50, 110, 100};
+
+    private final JuegoDAO acceso = new JuegoDAO();
+    private JuegosTableModel modeloColeccion;
 
     public VentanaPrincipal() {
         initComponents();
-        configurarTabla();
-        configurarPopup();
-        cargarDatos();
+        prepararTabla();
+        prepararMenuContextual();
+        refrescarListado();
         setLocationRelativeTo(null);
     }
 
@@ -25,334 +30,371 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        panelFiltros = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
-        cmbConsola = new javax.swing.JComboBox<>();
-        jLabel2 = new javax.swing.JLabel();
-        cmbEstado = new javax.swing.JComboBox<>();
-        btnFiltrar = new javax.swing.JButton();
-        btnLimpiar = new javax.swing.JButton();
-        btnAnyadir = new javax.swing.JButton();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        tablaJuegos = new javax.swing.JTable();
-        panelEstadisticas = new javax.swing.JPanel();
-        lblTotal = new javax.swing.JLabel();
-        lblCompletados = new javax.swing.JLabel();
-        lblMedia = new javax.swing.JLabel();
-        popupTabla = new javax.swing.JPopupMenu();
-        popAnyadir = new javax.swing.JMenuItem();
-        popEditar = new javax.swing.JMenuItem();
-        jSeparator2 = new javax.swing.JPopupMenu.Separator();
-        popEliminar = new javax.swing.JMenuItem();
-        jMenuBar1 = new javax.swing.JMenuBar();
-        jMenu1 = new javax.swing.JMenu();
-        mniSalir = new javax.swing.JMenuItem();
-        mnJuegos = new javax.swing.JMenu();
-        mniAnyadir = new javax.swing.JMenuItem();
-        mniEditar = new javax.swing.JMenuItem();
-        jSeparator1 = new javax.swing.JPopupMenu.Separator();
-        mniEliminar = new javax.swing.JMenuItem();
-        mnVista = new javax.swing.JMenu();
-        mniActualizar = new javax.swing.JMenuItem();
+        pnlFiltros = new javax.swing.JPanel();
+        btnNuevoJuego = new javax.swing.JButton();
+        lblFiltroEstado = new javax.swing.JLabel();
+        selEstado = new javax.swing.JComboBox<>();
+        lblFiltroConsola = new javax.swing.JLabel();
+        selConsola = new javax.swing.JComboBox<>();
+        btnAplicarFiltros = new javax.swing.JButton();
+        btnRestablecer = new javax.swing.JButton();
+        scrollColeccion = new javax.swing.JScrollPane();
+        tblColeccion = new javax.swing.JTable();
+        pnlResumen = new javax.swing.JPanel();
+        lblNumTotal = new javax.swing.JLabel();
+        lblNumTerminados = new javax.swing.JLabel();
+        lblNotaMedia = new javax.swing.JLabel();
+        menuContextual = new javax.swing.JPopupMenu();
+        ctxNuevo = new javax.swing.JMenuItem();
+        ctxModificar = new javax.swing.JMenuItem();
+        sepContextual = new javax.swing.JPopupMenu.Separator();
+        ctxBorrar = new javax.swing.JMenuItem();
+        barraMenus = new javax.swing.JMenuBar();
+        mnuPrograma = new javax.swing.JMenu();
+        itmCerrar = new javax.swing.JMenuItem();
+        mnuColeccion = new javax.swing.JMenu();
+        itmNuevo = new javax.swing.JMenuItem();
+        itmModificar = new javax.swing.JMenuItem();
+        sepColeccion = new javax.swing.JPopupMenu.Separator();
+        itmBorrar = new javax.swing.JMenuItem();
+        mnuVer = new javax.swing.JMenu();
+        itmRecargar = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("RetroVault — Biblioteca de Videojuegos Retro");
+        setTitle("RetroVault — Colección de Juegos Retro");
         setMinimumSize(new java.awt.Dimension(900, 600));
 
-        panelFiltros.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
+        pnlFiltros.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
 
-        jLabel1.setText("Consola:");
-        panelFiltros.add(jLabel1);
-
-        cmbConsola.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Todas", "NES", "SNES", "Mega Drive", "Game Boy", "PlayStation", "Nintendo 64", "Game Gear", "Arcade" }));
-        cmbConsola.addActionListener(new java.awt.event.ActionListener() {
+        btnNuevoJuego.setText("+ Nuevo juego");
+        btnNuevoJuego.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cmbConsolaActionPerformed(evt);
+                accionNuevoJuego(evt);
             }
         });
-        panelFiltros.add(cmbConsola);
+        pnlFiltros.add(btnNuevoJuego);
 
-        jLabel2.setText("Estado:");
-        panelFiltros.add(jLabel2);
+        lblFiltroEstado.setText("Progreso:");
+        pnlFiltros.add(lblFiltroEstado);
 
-        cmbEstado.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Todos", "Pendiente", "Jugando", "Completado", "Abandonado" }));
-        panelFiltros.add(cmbEstado);
+        selEstado.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Cualquiera", "Pendiente", "Jugando", "Completado", "Abandonado" }));
+        pnlFiltros.add(selEstado);
 
-        btnFiltrar.setText("Filtrar");
-        btnFiltrar.addActionListener(new java.awt.event.ActionListener() {
+        lblFiltroConsola.setText("Plataforma:");
+        pnlFiltros.add(lblFiltroConsola);
+
+        selConsola.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Cualquiera", "NES", "SNES", "Mega Drive", "Game Boy", "PlayStation", "Nintendo 64", "Game Gear", "Arcade" }));
+        pnlFiltros.add(selConsola);
+
+        btnAplicarFiltros.setText("Aplicar filtros");
+        btnAplicarFiltros.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnFiltrarActionPerformed(evt);
+                accionAplicarFiltros(evt);
             }
         });
-        panelFiltros.add(btnFiltrar);
+        pnlFiltros.add(btnAplicarFiltros);
 
-        btnLimpiar.setText("Limpiar");
-        btnLimpiar.addActionListener(new java.awt.event.ActionListener() {
+        btnRestablecer.setText("Restablecer");
+        btnRestablecer.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnLimpiarActionPerformed(evt);
+                accionRestablecer(evt);
             }
         });
-        panelFiltros.add(btnLimpiar);
+        pnlFiltros.add(btnRestablecer);
 
-        btnAnyadir.setText("+ Añadir");
-        btnAnyadir.addActionListener(new java.awt.event.ActionListener() {
+        getContentPane().add(pnlFiltros, java.awt.BorderLayout.NORTH);
+
+        tblColeccion.setGridColor(new java.awt.Color(60, 60, 60));
+        tblColeccion.setRowHeight(26);
+        tblColeccion.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        scrollColeccion.setViewportView(tblColeccion);
+
+        getContentPane().add(scrollColeccion, java.awt.BorderLayout.CENTER);
+
+        pnlResumen.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
+
+        lblNumTotal.setText(" Juegos: 0");
+        pnlResumen.add(lblNumTotal);
+
+        lblNumTerminados.setText(" | Terminados: 0");
+        pnlResumen.add(lblNumTerminados);
+
+        lblNotaMedia.setText(" | Nota media: –");
+        pnlResumen.add(lblNotaMedia);
+
+        getContentPane().add(pnlResumen, java.awt.BorderLayout.SOUTH);
+
+        ctxNuevo.setText("Nuevo juego…");
+        ctxNuevo.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnAnyadirActionPerformed(evt);
+                accionNuevoJuego(evt);
             }
         });
-        panelFiltros.add(btnAnyadir);
+        menuContextual.add(ctxNuevo);
 
-        getContentPane().add(panelFiltros, java.awt.BorderLayout.NORTH);
-
-        tablaJuegos.setGridColor(new java.awt.Color(60, 60, 60));
-        tablaJuegos.setRowHeight(26);
-        tablaJuegos.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        jScrollPane1.setViewportView(tablaJuegos);
-
-        getContentPane().add(jScrollPane1, java.awt.BorderLayout.CENTER);
-
-        panelEstadisticas.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
-
-        lblTotal.setText(" Total: 0");
-        panelEstadisticas.add(lblTotal);
-
-        lblCompletados.setText(" | Completados: 0");
-        panelEstadisticas.add(lblCompletados);
-
-        lblMedia.setText(" | Puntuación media: –");
-        panelEstadisticas.add(lblMedia);
-
-        getContentPane().add(panelEstadisticas, java.awt.BorderLayout.SOUTH);
-
-        popAnyadir.setText("Añadir juego…");
-        popAnyadir.addActionListener(new java.awt.event.ActionListener() {
+        ctxModificar.setText("Modificar juego…");
+        ctxModificar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnAnyadirActionPerformed(evt);
+                accionModificar(evt);
             }
         });
-        popupTabla.add(popAnyadir);
+        menuContextual.add(ctxModificar);
+        menuContextual.add(sepContextual);
 
-        popEditar.setText("Editar juego…");
-        popEditar.addActionListener(new java.awt.event.ActionListener() {
+        ctxBorrar.setText("Borrar juego");
+        ctxBorrar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                mniEditarActionPerformed(evt);
+                accionBorrar(evt);
             }
         });
-        popupTabla.add(popEditar);
-        popupTabla.add(jSeparator2);
+        menuContextual.add(ctxBorrar);
 
-        popEliminar.setText("Eliminar juego");
-        popEliminar.addActionListener(new java.awt.event.ActionListener() {
+        mnuPrograma.setText("Programa");
+
+        itmCerrar.setText("Cerrar aplicación");
+        itmCerrar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                mniEliminarActionPerformed(evt);
+                accionCerrar(evt);
             }
         });
-        popupTabla.add(popEliminar);
+        mnuPrograma.add(itmCerrar);
 
-        jMenu1.setText("Archivo");
+        barraMenus.add(mnuPrograma);
 
-        mniSalir.setText("Salir");
-        mniSalir.addActionListener(new java.awt.event.ActionListener() {
+        mnuColeccion.setText("Colección");
+
+        itmNuevo.setText("Nuevo juego…");
+        itmNuevo.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_N, 0));
+        itmNuevo.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                mniSalirActionPerformed(evt);
+                accionNuevoJuego(evt);
             }
         });
-        jMenu1.add(mniSalir);
+        mnuColeccion.add(itmNuevo);
 
-        jMenuBar1.add(jMenu1);
-
-        mnJuegos.setText("Juegos");
-
-        mniAnyadir.setText("Añadir juego…");
-        mniAnyadir.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_N, 0));
-        mniAnyadir.addActionListener(new java.awt.event.ActionListener() {
+        itmModificar.setText("Modificar juego…");
+        itmModificar.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_E, 0));
+        itmModificar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnAnyadirActionPerformed(evt);
+                accionModificar(evt);
             }
         });
-        mnJuegos.add(mniAnyadir);
+        mnuColeccion.add(itmModificar);
+        mnuColeccion.add(sepColeccion);
 
-        mniEditar.setText("Editar juego…");
-        mniEditar.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_E, 0));
-        mniEditar.addActionListener(new java.awt.event.ActionListener() {
+        itmBorrar.setText("Borrar juego");
+        itmBorrar.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_DELETE, 0));
+        itmBorrar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                mniEditarActionPerformed(evt);
+                accionBorrar(evt);
             }
         });
-        mnJuegos.add(mniEditar);
-        mnJuegos.add(jSeparator1);
+        mnuColeccion.add(itmBorrar);
 
-        mniEliminar.setText("Eliminar juego");
-        mniEliminar.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_DELETE, 0));
-        mniEliminar.addActionListener(new java.awt.event.ActionListener() {
+        barraMenus.add(mnuColeccion);
+
+        mnuVer.setText("Ver");
+
+        itmRecargar.setText("Recargar");
+        itmRecargar.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F5, 0));
+        itmRecargar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                mniEliminarActionPerformed(evt);
+                accionRecargar(evt);
             }
         });
-        mnJuegos.add(mniEliminar);
+        mnuVer.add(itmRecargar);
 
-        jMenuBar1.add(mnJuegos);
+        barraMenus.add(mnuVer);
 
-        mnVista.setText("Vista");
-
-        mniActualizar.setText("Actualizar");
-        mniActualizar.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F5, 0));
-        mniActualizar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                mniActualizarActionPerformed(evt);
-            }
-        });
-        mnVista.add(mniActualizar);
-
-        jMenuBar1.add(mnVista);
-
-        setJMenuBar(jMenuBar1);
+        setJMenuBar(barraMenus);
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void configurarTabla() {
-        modeloTabla = new JuegosTableModel(new java.util.ArrayList<>());
-        tablaJuegos.setModel(modeloTabla);
+    // ═════════════ Manejadores de eventos (enlazados desde el .form) ═════════════
 
-        ConsolaColorRenderer renderer = new ConsolaColorRenderer();
-        for (int i = 0; i < tablaJuegos.getColumnCount(); i++) {
-            tablaJuegos.getColumnModel().getColumn(i).setCellRenderer(renderer);
+    private void accionNuevoJuego(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_accionNuevoJuego
+        Juego creado = pedirDatosAlUsuario(null);
+        if (creado != null) {
+            acceso.insertar(creado);
+            refrescarListado();
         }
+    }//GEN-LAST:event_accionNuevoJuego
 
-        tablaJuegos.getColumnModel().getColumn(0).setPreferredWidth(35);
-        tablaJuegos.getColumnModel().getColumn(1).setPreferredWidth(200);
-        tablaJuegos.getColumnModel().getColumn(2).setPreferredWidth(110);
-        tablaJuegos.getColumnModel().getColumn(3).setPreferredWidth(100);
-        tablaJuegos.getColumnModel().getColumn(4).setPreferredWidth(50);
-        tablaJuegos.getColumnModel().getColumn(5).setPreferredWidth(110);
-        tablaJuegos.getColumnModel().getColumn(6).setPreferredWidth(100);
+    private void accionModificar(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_accionModificar
+        modificarJuegoElegido();
+    }//GEN-LAST:event_accionModificar
 
-        tablaJuegos.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent e) {
-                if (e.getClickCount() == 2) editarSeleccionado();
-            }
-        });
+    private void accionBorrar(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_accionBorrar
+        borrarJuegoElegido();
+    }//GEN-LAST:event_accionBorrar
+
+    private void accionAplicarFiltros(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_accionAplicarFiltros
+        modeloColeccion.setJuegos(consultarSegunFiltros());
+    }//GEN-LAST:event_accionAplicarFiltros
+
+    private void accionRestablecer(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_accionRestablecer
+        selConsola.setSelectedIndex(0);
+        selEstado.setSelectedIndex(0);
+        refrescarListado();
+    }//GEN-LAST:event_accionRestablecer
+
+    private void accionRecargar(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_accionRecargar
+        refrescarListado();
+    }//GEN-LAST:event_accionRecargar
+
+    private void accionCerrar(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_accionCerrar
+        System.exit(0);
+    }//GEN-LAST:event_accionCerrar
+
+    // ═════════════ Preparación de componentes ═════════════
+
+    /** Enlaza el modelo, el renderer, los anchos y el doble clic de la tabla. */
+    private void prepararTabla() {
+        modeloColeccion = new JuegosTableModel(new java.util.ArrayList<>());
+        tblColeccion.setModel(modeloColeccion);
+
+        ConsolaColorRenderer pintor = new ConsolaColorRenderer();
+        javax.swing.table.TableColumnModel columnas = tblColeccion.getColumnModel();
+        for (int i = 0; i < columnas.getColumnCount(); i++) {
+            columnas.getColumn(i).setCellRenderer(pintor);
+            columnas.getColumn(i).setPreferredWidth(ANCHOS_COLUMNA[i]);
+        }
     }
 
-    private void configurarPopup() {
-        tablaJuegos.setComponentPopupMenu(popupTabla);
+    /**
+     * Menú contextual de la tabla. Un único MouseAdapter se encarga de dos
+     * cosas: seleccionar la fila bajo el cursor al pulsar y abrir el
+     * formulario de edición con el doble clic.
+     */
+    private void prepararMenuContextual() {
+        tblColeccion.setComponentPopupMenu(menuContextual);
 
-        tablaJuegos.addMouseListener(new java.awt.event.MouseAdapter() {
+        tblColeccion.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mousePressed(java.awt.event.MouseEvent e) {
-                int fila = tablaJuegos.rowAtPoint(e.getPoint());
-                if (fila >= 0) tablaJuegos.setRowSelectionInterval(fila, fila);
+                int fila = tblColeccion.rowAtPoint(e.getPoint());
+                if (fila >= 0) {
+                    tblColeccion.setRowSelectionInterval(fila, fila);
+                }
+            }
+
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    modificarJuegoElegido();
+                }
             }
         });
     }
 
-    private void cargarDatos() {
-        modeloTabla.setJuegos(dao.obtenerTodos());
-        actualizarEstadisticas();
+    // ═════════════ Lógica de la colección ═════════════
+
+    /** Vuelve a leer todos los juegos de la base de datos y recalcula el resumen. */
+    private void refrescarListado() {
+        modeloColeccion.setJuegos(acceso.obtenerTodos());
+        refrescarResumen();
     }
 
-    private void actualizarEstadisticas() {
-        int    total = dao.contarTotal();
-        int    comp  = dao.contarCompletados();
-        double med   = dao.puntuacionMedia();
-        lblTotal.setText      (" Total: " + total);
-        lblCompletados.setText(" | Completados: " + comp);
-        lblMedia.setText      (" | Media: " +
-            (total == 0 ? "–" : String.format("%.1f ★", med)));
+    private void refrescarResumen() {
+        int juegos = acceso.contarTotal();
+        int terminados = acceso.contarCompletados();
+        String nota = juegos == 0
+                ? "–"
+                : String.format("%.1f ★", acceso.puntuacionMedia());
+
+        lblNumTotal.setText(" Juegos: " + juegos);
+        lblNumTerminados.setText(" | Terminados: " + terminados);
+        lblNotaMedia.setText(" | Nota media: " + nota);
     }
 
-    private void editarSeleccionado() {
-        int fila = tablaJuegos.getSelectedRow();
-        if (fila < 0) return;
-        Juego j = modeloTabla.getJuego(fila);
-        DialogoJuego dlg = new DialogoJuego(this, j);
-        dlg.setVisible(true);
-        if (dlg.isGuardado()) { dao.actualizar(dlg.getJuego()); cargarDatos(); }
+    /**
+     * Decide qué consulta lanzar según los combos. La posición 0 de cada combo
+     * significa "sin filtro". Si hay plataforma elegida manda ella; si no, se
+     * mira el progreso; y si tampoco hay, se devuelve todo.
+     */
+    private List<Juego> consultarSegunFiltros() {
+        if (selConsola.getSelectedIndex() > 0) {
+            return acceso.obtenerPorConsola((String) selConsola.getSelectedItem());
+        }
+        if (selEstado.getSelectedIndex() > 0) {
+            return acceso.obtenerPorEstado((String) selEstado.getSelectedItem());
+        }
+        return acceso.obtenerTodos();
     }
 
-    private void eliminarSeleccionado() {
-        int fila = tablaJuegos.getSelectedRow();
-        if (fila < 0) return;
-        Juego j = modeloTabla.getJuego(fila);
-        int r = javax.swing.JOptionPane.showConfirmDialog(this,
-            "¿Eliminar \"" + j.getTitulo() + "\" de tu biblioteca?",
-            "Confirmar eliminación", javax.swing.JOptionPane.YES_NO_OPTION,
-            javax.swing.JOptionPane.WARNING_MESSAGE);
-        if (r == javax.swing.JOptionPane.YES_OPTION) {
-            dao.eliminar(j.getId()); cargarDatos();
+    /** Juego de la fila marcada, o null si no hay ninguna seleccionada. */
+    private Juego juegoMarcado() {
+        int fila = tblColeccion.getSelectedRow();
+        return fila < 0 ? null : modeloColeccion.getJuego(fila);
+    }
+
+    /**
+     * Muestra el formulario (vacío si base es null) y devuelve el juego
+     * rellenado, o null si el usuario canceló.
+     */
+    private Juego pedirDatosAlUsuario(Juego base) {
+        DialogoJuego formulario = new DialogoJuego(this, base);
+        formulario.setVisible(true);
+        return formulario.isGuardado() ? formulario.getJuego() : null;
+    }
+
+    private void modificarJuegoElegido() {
+        Juego elegido = juegoMarcado();
+        if (elegido == null) {
+            return;
+        }
+        Juego editado = pedirDatosAlUsuario(elegido);
+        if (editado != null) {
+            acceso.actualizar(editado);
+            refrescarListado();
         }
     }
 
-    private void btnAnyadirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAnyadirActionPerformed
-        DialogoJuego dlg = new DialogoJuego(this, null);
-        dlg.setVisible(true);
-        if (dlg.isGuardado()) { dao.insertar(dlg.getJuego()); cargarDatos(); }
-    }//GEN-LAST:event_btnAnyadirActionPerformed
-
-    private void mniEditarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mniEditarActionPerformed
-        editarSeleccionado();
-    }//GEN-LAST:event_mniEditarActionPerformed
-
-    private void mniEliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mniEliminarActionPerformed
-        eliminarSeleccionado();
-    }//GEN-LAST:event_mniEliminarActionPerformed
-
-    private void btnFiltrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFiltrarActionPerformed
-        String cons = (String) cmbConsola.getSelectedItem();
-        String est  = (String) cmbEstado.getSelectedItem();
-        java.util.List<Juego> lista;
-        if      (!"Todas".equals(cons)) lista = dao.obtenerPorConsola(cons);
-        else if (!"Todos".equals(est))  lista = dao.obtenerPorEstado(est);
-        else                            lista = dao.obtenerTodos();
-        modeloTabla.setJuegos(lista);
-    }//GEN-LAST:event_btnFiltrarActionPerformed
-
-    private void btnLimpiarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimpiarActionPerformed
-        cmbConsola.setSelectedIndex(0); cmbEstado.setSelectedIndex(0); cargarDatos();
-    }//GEN-LAST:event_btnLimpiarActionPerformed
-
-    private void mniActualizarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mniActualizarActionPerformed
-        cargarDatos();
-    }//GEN-LAST:event_mniActualizarActionPerformed
-
-    private void mniSalirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mniSalirActionPerformed
-        System.exit(0);
-    }//GEN-LAST:event_mniSalirActionPerformed
-
-    private void cmbConsolaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbConsolaActionPerformed
-    }//GEN-LAST:event_cmbConsolaActionPerformed
+    private void borrarJuegoElegido() {
+        Juego elegido = juegoMarcado();
+        if (elegido == null) {
+            return;
+        }
+        int respuesta = JOptionPane.showConfirmDialog(this,
+                "¿Quitar \"" + elegido.getTitulo() + "\" de la colección?",
+                "Confirmar borrado", JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+        if (respuesta == JOptionPane.YES_OPTION) {
+            acceso.eliminar(elegido.getId());
+            refrescarListado();
+        }
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnAnyadir;
-    private javax.swing.JButton btnFiltrar;
-    private javax.swing.JButton btnLimpiar;
-    private javax.swing.JComboBox<String> cmbConsola;
-    private javax.swing.JComboBox<String> cmbEstado;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JMenu jMenu1;
-    private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JPopupMenu.Separator jSeparator1;
-    private javax.swing.JPopupMenu.Separator jSeparator2;
-    private javax.swing.JLabel lblCompletados;
-    private javax.swing.JLabel lblMedia;
-    private javax.swing.JLabel lblTotal;
-    private javax.swing.JMenu mnJuegos;
-    private javax.swing.JMenu mnVista;
-    private javax.swing.JMenuItem mniActualizar;
-    private javax.swing.JMenuItem mniAnyadir;
-    private javax.swing.JMenuItem mniEditar;
-    private javax.swing.JMenuItem mniEliminar;
-    private javax.swing.JMenuItem mniSalir;
-    private javax.swing.JPanel panelEstadisticas;
-    private javax.swing.JPanel panelFiltros;
-    private javax.swing.JMenuItem popAnyadir;
-    private javax.swing.JMenuItem popEditar;
-    private javax.swing.JMenuItem popEliminar;
-    private javax.swing.JPopupMenu popupTabla;
-    private javax.swing.JTable tablaJuegos;
+    private javax.swing.JMenuBar barraMenus;
+    private javax.swing.JButton btnAplicarFiltros;
+    private javax.swing.JButton btnNuevoJuego;
+    private javax.swing.JButton btnRestablecer;
+    private javax.swing.JMenuItem ctxBorrar;
+    private javax.swing.JMenuItem ctxModificar;
+    private javax.swing.JMenuItem ctxNuevo;
+    private javax.swing.JMenuItem itmBorrar;
+    private javax.swing.JMenuItem itmCerrar;
+    private javax.swing.JMenuItem itmModificar;
+    private javax.swing.JMenuItem itmNuevo;
+    private javax.swing.JMenuItem itmRecargar;
+    private javax.swing.JLabel lblFiltroConsola;
+    private javax.swing.JLabel lblFiltroEstado;
+    private javax.swing.JLabel lblNotaMedia;
+    private javax.swing.JLabel lblNumTerminados;
+    private javax.swing.JLabel lblNumTotal;
+    private javax.swing.JPopupMenu menuContextual;
+    private javax.swing.JMenu mnuColeccion;
+    private javax.swing.JMenu mnuPrograma;
+    private javax.swing.JMenu mnuVer;
+    private javax.swing.JPanel pnlFiltros;
+    private javax.swing.JPanel pnlResumen;
+    private javax.swing.JScrollPane scrollColeccion;
+    private javax.swing.JComboBox<String> selConsola;
+    private javax.swing.JComboBox<String> selEstado;
+    private javax.swing.JPopupMenu.Separator sepColeccion;
+    private javax.swing.JPopupMenu.Separator sepContextual;
+    private javax.swing.JTable tblColeccion;
     // End of variables declaration//GEN-END:variables
 }
